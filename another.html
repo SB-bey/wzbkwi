@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>王子保电子宠物</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+    body {
+      font-family: 'DotGothic16', monospace;
+      background: linear-gradient(135deg, #ffe6f0, #e6f7ff);
+      image-rendering: pixelated;
+      transition: background-color 0.5s ease;
+    }
+    .container {
+      max-width: 90%;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background-color: #fff0f5;
+      border: 6px double #ff66aa;
+      border-radius: 2rem;
+      box-shadow: 0 0 30px rgba(255, 105, 180, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .pet-display {
+      width: 150px;
+      height: 150px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+      background-color: #cceeff;
+      border: 4px inset #66ccff;
+      border-radius: 1rem;
+      box-shadow: inset 0 0 8px #99ddff;
+    }
+    .message-box {
+      background-color: #fff9ee;
+      padding: 1rem;
+      border-radius: 1rem;
+      margin-top: 1rem;
+      border: 2px dashed #ffaaaa;
+      color: #333;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      width: 100%;
+    }
+    .action-button {
+      background-color: #ffccdd;
+      color: #4b0082;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: bold;
+      border: 2px solid #ff99bb;
+      transition: all 0.2s ease;
+      width: 100%;
+      box-shadow: 0 4px #ff99bb;
+    }
+    .action-button:hover {
+      background-color: #ffe0ee;
+      transform: scale(1.05);
+    }
+    .action-button:active {
+      background-color: #ff99bb;
+      transform: scale(0.97);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+    @media (min-width: 640px) {
+      .button-group {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .action-button {
+        width: auto;
+        margin: 0.375rem;
+      }
+    }
+    .super-emoji {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      pointer-events: none;
+      user-select: none;
+    }
+    .super-emoji.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-3xl font-bold text-pink-700 mb-4">王子保电子宠物</h1>
+    <img id="petImage" src="wang.jpg" alt="王子保先生" class="pet-display" onerror="this.src='https://placehold.co/150x150/ffe6f0/ff66aa?text=坏了';">
+    <p class="text-xl font-semibold text-indigo-700 mb-2">王子保先生</p>
+    <div id="messageBox" class="message-box">
+      <p>「哼，愚民们。想求什么？」</p>
+    </div>
+    <div class="button-group">
+      <button id="askGeoBtn" class="action-button">问地理问题</button>
+      <button id="kneelBtn" class="action-button">下跪</button>
+      <button id="praiseBtn" class="action-button">赞美</button>
+      <button id="statusBtn" class="action-button">查看状态</button>
+      <button id="askPastBtn" class="action-button">询问过去</button>
+      <button id="offerGiftBtn" class="action-button">献上礼物</button>
+      <button id="requestGuidanceBtn" class="action-button">请求指导</button>
+    </div>
+  </div>
+
+  <div id="superEmoji" class="super-emoji hidden">🥰</div>
+
+  <script>
+    const WANG_PNG_URL = "wang.jpg";
+    const WANG_GIF_URL = "wang.gif";
+
+    const messageBox = document.getElementById('messageBox');
+    const petImage = document.getElementById('petImage');
+    const askGeoBtn = document.getElementById('askGeoBtn');
+    const kneelBtn = document.getElementById('kneelBtn');
+    const praiseBtn = document.getElementById('praiseBtn');
+    const statusBtn = document.getElementById('statusBtn');
+    const askPastBtn = document.getElementById('askPastBtn');
+    const offerGiftBtn = document.getElementById('offerGiftBtn');
+    const requestGuidanceBtn = document.getElementById('requestGuidanceBtn');
+    const bodyElement = document.body;
+    const superEmoji = document.getElementById('superEmoji');
+
+    const responses = {
+      initial: "哼，愚民们。想求什么？",
+      askGeo: [
+  "地理？呃……我突然有点困……不如你先跪一下？",
+  "等一下，我要先看看今天的风水适不适合谈地理。",
+  "哎呀，我的地理资料在另一个维度忘带了。",
+  "我才刚醒，别急，先送点贡品来提提神。",
+  "地理的问题嘛……下次一定回答。",
+  "唔，这种问题不如你问董老师？我在放假。",
+  "今天不是我的回答日，请明天再试。",
+  "我最近正在闭关研究‘如何不回答地理问题’。",
+  "我对地理的热情只在午饭后才苏醒。",
+  "地理的问题太浅了，我怕讲了你理解不了。",
+  "我正在考虑这个问题的重要性，目前初步结论是：不重要。",
+  "你居然问地理？真是有勇气，但我偏不答。",
+  "问我地理？好家伙你走错频道了。",
+  "地理……我只负责统治，不负责讲解。",
+  "说真的，我还不如直接给你一张世界地图叫你自己看。",
+  "我只对我的王国地图感兴趣，别拿人类的地图烦我。",
+  "地理？我只管你在哪，怎么会在这问我问题？",
+  "我的答案藏在地心深处，你要去挖吗？",
+  "别问地理，问我怎么称霸世界比较实在。",
+  "这个问题……本王目前决定跳过。下一位！"
+],
+      kneel: [
+  "很好。你开始明白你在这个世界的定位了。",
+  "这才像话。要是早这样我就赏你一个笑容了。",
+  "你的膝盖终于想起自己的使命了。",
+  "咔咔作响的声音真悦耳，你听到了吗？",
+  "继续跪着，别急着起来，我还没看够。",
+  "你的顺从让我仿佛回到了统治黄金时代。",
+  "膝盖一软，尊严全无——完美。",
+  "再磕两个试试，我看看你今天是不是格外诚恳。",
+  "不跪不知道，一跪……你真有天赋。",
+  "膝盖就是通往智慧的开关，你现在才开。",
+  "你以为你在下跪，其实你在升华。",
+  "这副模样，比你说的那些赞美词都要动听。",
+  "别急着站起来，你站着也不会比我高。",
+  "今天这跪，记你大功一件。",
+  "膝盖是用来走路的？不，是用来敬我的。",
+  "你的骨头居然没响？再用点力。",
+  "快跪快跪，我都准备截图留念了。",
+  "是的，是的，就这！再跪十秒我给你转发朋友圈。",
+  "我允许你跪在我面前，这是荣耀，不是耻辱。",
+  "这姿态……还不够虔诚，再来！"
+],
+      praise: [
+  "赞美？听着倒像你想骗我跪下。",
+  "呵呵，花言巧语就想蒙混过关？不可能。",
+  "你那点赞美，比蚊子叫还烦人。",
+  "赞美？我更喜欢听你跪着求饶的声音。",
+  "别拿那些廉价的赞美来糊弄我。",
+  "哼，嘴巴甜不代表你心里真诚。",
+  "你以为几句好话能让我忘了你之前的态度？笑话。",
+  "赞美多了就腻了，换点新花样。",
+  "你那点赞美，充其量是给自己安慰。",
+  "我不吃你那一套虚假的甜言蜜语。",
+  "赞美我？先跪下再说。",
+  "别用赞美掩饰你的卑微。",
+  "你的赞美让我只想翻白眼。",
+  "嘴上说好听的，行动在哪？",
+  "你那赞美，就像廉价的礼物，毫无价值。",
+  "想得到我的认可？跪着求吧。",
+  "我不需要你的赞美，我需要你的臣服。",
+  "赞美？那不如你痛苦的呻吟更动听。",
+  "你以为赞美能改变什么？别做梦了。",
+  "你的赞美，是我最不屑的噪音。"
+],
+      status: [
+  "状态？我永远是巅峰，你呢？还是跪下吧。",
+  "你关心我的状态？真可笑，不如先关心下跪的姿势。",
+  "我状态良好，统治世界正顺风顺水。",
+  "我的存在本身就是一种压迫，你感受到了吗？",
+  "状态完美，唯独你还没搞懂怎么服从。",
+  "别浪费时间在无聊的状态上，去跪着反省。",
+  "我的状态，是你永远达不到的高度。",
+  "我状态杠杠的，你的膝盖准备好了吗？",
+  "我在高处看风景，你在低处跪成泥。",
+  "状态在线，傲视群雄，俯视愚民。",
+  "问状态？那我问你，跪了吗？",
+  "我状态是你噩梦的起点，别试图逃避。",
+  "我的状态，就是你的绝望源泉。",
+  "我永远在线，你永远离不开跪下的任务。",
+  "我的状态如日中天，你的只是尘埃。",
+  "状态稳定，我的威严无人能敌。",
+  "我就是状态，状态就是我。",
+  "状态好到炸裂，你还在装死吗？",
+  "我从不下线，你呢，跪的次数够了吗？",
+  "状态无敌，你的膝盖已经认命了吧。"
+],
+      askPast: [
+  "我的过去？你这种凡人不配知道。",
+  "过去？那是我权威的根基，不是给你看的玩物。",
+  "别傻了，过去只是我踩过的尘埃。",
+  "想知道我的过去？先学会低头跪拜。",
+  "我的历史藏在黑暗里，你不配窥视。",
+  "我过去的辉煌远超你的想象，但你懂什么？",
+  "过去是我的秘密，你的任务是服从现在。",
+  "历史只属于强者，你连站起来都做不到。",
+  "我的过去不是故事，是戒律，你敢触碰吗？",
+  "过去对你毫无意义，跪下才有未来。",
+  "问过去就像是求饶，没用的。",
+  "你对我的过去知之甚少，不要浪费时间。",
+  "我的过去是一座高墙，挡住你所有幻想。",
+  "你问过去？我问你跪了没。",
+  "过去是王座的基石，你的膝盖是石砖。",
+  "我的历史，是你的噩梦源泉。",
+  "别试图从过去找到借口，跪下才是正道。",
+  "我的过去辉煌得让你无地自容。",
+  "过去只是序章，真正的戏在你跪下时开始。",
+  "你不配听我的过去，只配跪着感受。"
+],
+      offerGift: [
+  "哼，这点小玩意儿还想蒙骗我？可笑。",
+  "礼物？就这？不过是我统治你们的玩笑罢了。",
+  "虽然我嘴上不说，但你送的东西多少让我有点动心。",
+  "别以为我会被你这俗物收买，我高贵得很。",
+  "好吧，这点小便宜我收下了，可别让我发现你居心叵测。",
+  "我收下这东西，不是因为喜欢，是因为它能让我更强。",
+  "这种东西，勉强能入我法眼，勉强。",
+  "你这礼物，倒也合我口味，别让我看见垃圾。",
+  "我心高气傲，但小便宜谁不爱？不过你别太得意。",
+  "别以为我会感激你，我只是在算计你。",
+  "这礼物算是对我实力的微小认可，别得意太早。",
+  "哼，小便宜我收了，记住，我不是被感动了。",
+  "你的礼物价值连城？我只在乎它带来的利益。",
+  "就这点东西，也敢献给我？算你有点眼光。",
+  "我高贵不代表我不识货，你这东西倒有点用处。",
+  "我不是乞丐，但小便宜还是喜欢拿的。",
+  "你的礼物让我稍稍放松警惕，但别指望我真心。",
+  "收下了，但别想以后可以指挥我。",
+  "你的小礼物，算是给我的膝盖做润滑了。",
+  "我喜欢小便宜，但我更喜欢让你跪下的快感。"
+],
+      requestGuidance: [
+  "指导？我只教你跪，不教废话。",
+  "你以为我会温柔指点？别做梦了。",
+  "真正的指导，是让你知道谁才是主宰。",
+  "我教你唯一的技能：服从。",
+  "指导？那是愚民的幻想，我只让你低头。",
+  "你需要的是认清自己的渺小，而不是指引。",
+  "别问我怎么走路，先学会跪下。",
+  "我的指导是你永远无法逃脱的枷锁。",
+  "想学知识？先学如何取悦我。",
+  "我不会教你怎么强大，只教你怎么臣服。",
+  "指导？你连跪下都不敢，还谈什么成长？",
+  "我只会引领你走向绝望，不是希望。",
+  "我的指导让你明白，服从才是唯一出路。",
+  "你以为指导能让你自由？只有跪下才自由。",
+  "我教你的，是如何放弃抵抗的艺术。",
+  "指导？就是让你永远活在我的阴影下。",
+  "你求指导，其实是求饶。",
+  "我的指导让你永远低头，永远臣服。",
+  "别以为你能驾驭我，真正的指导是你驾驭不了自己。",
+  "指导？我教你的是，跪拜之道。"
+],
+      defaultKneel: [
+  "跪！别磨蹭！",
+  "跪下，这不是请求，是命令！",
+  "你以为还能站着？跪着吧！",
+  "膝盖都不会抬？真是废物。",
+  "跪下，立刻！别让我再说第二遍。",
+  "你跪了，世界才安静。",
+  "跪着才能听见我的声音。",
+  "跪，是你唯一的出路。",
+  "膝盖跪烂了才算完成任务。",
+  "跪下，感受这无上荣耀。",
+  "跪，不跪都是废物的区别。",
+  "跪下，别让我看到你的不服。",
+  "跪着才是对我的尊敬。",
+  "跪下，时间不多了。",
+  "跪，不跪都没人会救你。",
+  "跪着听我吩咐，别再犯贱了。",
+  "跪才有资格和我说话。",
+  "跪下，别让我再怀疑你的忠诚。",
+  "跪，是你对我的唯一承诺。",
+  "跪，跪，跪，别废话。"
+]
+    };
+
+    function displayMessage(messagesArray) {
+      const msg = messagesArray[Math.floor(Math.random() * messagesArray.length)];
+      messageBox.innerHTML = `<p>${msg}</p>`;
+      petImage.src = WANG_GIF_URL;
+    }
+
+    function resetPetImage() {
+      petImage.src = WANG_PNG_URL;
+    }
+
+    function triggerHapticFeedback() {
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+
+    let currentTimeout;
+    let kneelCounter = 0;
+    let lastKneelTime = 0;
+
+    function hideSuperEmoji() {
+      superEmoji.style.opacity = 0;
+      setTimeout(() => superEmoji.classList.add('hidden'), 500);
+    }
+
+    function handleButtonClick(responsesArray) {
+      triggerHapticFeedback();
+      clearTimeout(currentTimeout);
+      bodyElement.style.background = 'linear-gradient(135deg, #ffe6f0, #e6f7ff)';
+      displayMessage(responsesArray);
+      kneelCounter = 0;
+      hideSuperEmoji();
+      currentTimeout = setTimeout(() => {
+        displayMessage(responses.defaultKneel);
+        setTimeout(resetPetImage, 3000);
+      }, 3000);
+    }
+
+    askGeoBtn.onclick = () => handleButtonClick(responses.askGeo);
+    praiseBtn.onclick = () => handleButtonClick(responses.praise);
+    statusBtn.onclick = () => handleButtonClick(responses.status);
+    askPastBtn.onclick = () => handleButtonClick(responses.askPast);
+    offerGiftBtn.onclick = () => handleButtonClick(responses.offerGift);
+    requestGuidanceBtn.onclick = () => handleButtonClick(responses.requestGuidance);
+
+    kneelBtn.onclick = () => {
+      triggerHapticFeedback();
+      clearTimeout(currentTimeout);
+      displayMessage(responses.kneel);
+      bodyElement.style.backgroundColor = '#ffb3c6';
+
+      const now = Date.now();
+      kneelCounter = now - lastKneelTime > 1000 ? 1 : kneelCounter + 1;
+      lastKneelTime = now;
+
+      if (kneelCounter >= 10) {
+        superEmoji.classList.remove('hidden');
+        superEmoji.style.opacity = 1;
+        setTimeout(() => hideSuperEmoji(), 2500);
+        kneelCounter = 0;
+      }
+
+      currentTimeout = setTimeout(resetPetImage, 3000);
+    };
+
+    window.onload = () => {
+      displayMessage([responses.initial]);
+      currentTimeout = setTimeout(resetPetImage, 3000);
+    };
+  </script>
+</body>
+</html>
